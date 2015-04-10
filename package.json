@@ -4,9 +4,17 @@
   "description": "CART screen for PyCon 2015",
   "main": "index.js",
   "scripts": {
-    "build": "./node_modules/.bin/browserify src/index.js -o static/index.js",
+    "fetch": "curl --silent --show-error https://us.pycon.org/2015/schedule/conference.json > static/conference.json",
+    "browserify": "./node_modules/.bin/browserify src/index.js -o static/index.js",
+    "build": "npm run browserify && npm run fetch",
     "lint": "./node_modules/.bin/eslint src/*.js",
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "eslintConfig": {
+    "env": {
+      "browser": true,
+      "node": true
+    }
   },
   "repository": {
     "type": "git",
@@ -22,8 +30,7 @@
   },
   "homepage": "https://github.com/PyCon/2015-cart-screen",
   "dependencies": {
-    "clone": "^1.0.2",
-    "extend": "^2.0.0",
+    "lodash": "^3.6.0",
     "sorted-object": "^1.0.0",
     "url": "^0.10.3"
   },
