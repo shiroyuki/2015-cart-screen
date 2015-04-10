@@ -4,6 +4,7 @@
 var _ = require("lodash");
 var sortedObject = require("sorted-object");
 var url = require("url");
+var streamFrame;
 
 var baseUrl = url.parse("https://www.streamtext.net/player", true);
 // Because https://us.ycon.org does not set CORS headers, we have our own copy
@@ -46,10 +47,48 @@ function createIframe(streamTextUrl) {
 }
 
 function getStreamTextUrl() {
-    var inputUrl = window.prompt("Enter URL");  // eslint-disable-line no-alert
-    return createStreamTextUrl(extractEventId(inputUrl, true));
+    var inputUrl = localStorage.getItem('reloadingTarget') || window.prompt("Enter URL") || 'http://www.streamtext.net/player?event=IHaveADream&chat=false',
+        eventId;  // eslint-disable-line no-alert
+
+    if (!inputUrl) {
+        localStorage.removeItem('reloadingTarget');
+
+        console.error('No URL is given.');
+
+        return;
+    }
+
+    localStorage.setItem('reloadingTarget', inputUrl);
+
+    eventId = extractEventId(inputUrl, true);
+
+    checkForActiveEvent(eventId);
+
+    return createStreamTextUrl();
 }
 
-document.getElementById("stream-text-container").appendChild(createIframe(getStreamTextUrl()));
+function checkForActiveEvent(eventId) {
+    //http://www.streamtext.net/text-data.ashx?event=
+    var apiUrl = 'http://www.streamtext.net/text-data.ashx';
+
+    $.ajax(apiUrl, {
+        data: {
+            event: eventId,
+            last:  0
+        },
+        success: function (response) {
+            localStorage.removeItem('reloadingTarget');
+        },
+        statusCode: {
+            404: function() {
+                setTimeout(function() { history.go(); }, 2000);
+            }
+        }
+    });
+}
+
+streamFrame = createIframe(getStreamTextUrl());
+
+document.getElementById("stream-text-container").appendChild(streamFrame);
 
 })();  // IIFE
